@@ -23,12 +23,12 @@ const COURSE = {
 
   users: [
     { username: "lucas",   name: "Lucas",   role: "admin", password: "admin@bhar25" },
-    { username: "joelma",  name: "Joelma",  role: "secretaria" },
-    { username: "bia",     name: "Bia",     role: "secretaria" },
-    { username: "tairine", name: "Tairine", role: "secretaria" },
-    { username: "taina",   name: "Tainá",   role: "secretaria" },
-    { username: "mikaeli", name: "Mikaeli", role: "secretaria" },
-    { username: "lucila",  name: "Lucila",  role: "secretaria" }
+    { username: "joelma",  name: "Joelma",  role: "secretaria", short: "Jo" },
+    { username: "bia",     name: "Bia",     role: "secretaria", short: "Bi" },
+    { username: "tairine", name: "Tairine", role: "secretaria", short: "Tr" },
+    { username: "taina",   name: "Tainá",   role: "secretaria", short: "Tn" },
+    { username: "mikaeli", name: "Mikaeli", role: "secretaria", short: "Mi" },
+    { username: "lucila",  name: "Lucila",  role: "secretaria", short: "Lu" }
   ],
 
   tracks: [
@@ -171,7 +171,9 @@ const COURSE = {
       { q: "Se a IA gerar uma informação que você não tem certeza, o correto é:", options: ["Conferir com a equipe antes de usar", "Repassar como verdade absoluta", "Ignorar a dúvida", "Apagar e não falar com ninguém"], answer: 0 },
       { q: "A IA deve ser vista como:", options: ["Uma ferramenta de apoio ao seu trabalho", "Sua substituta sem supervisão", "Uma fonte infalível", "Um perigo a ser evitado sempre"], answer: 0 },
       { q: "Para tirar bom proveito da IA, é importante:", options: ["Saber dar instruções claras (bom contexto)", "Não explicar nada", "Usar sempre da mesma forma", "Evitar aprender a usá-la"], answer: 0 },
-      { q: "Quem se destaca no trabalho hoje é quem:", options: ["Aprende a usar as ferramentas a seu favor", "Recusa qualquer tecnologia", "Ignora treinamentos", "Faz tudo manualmente sempre"], answer: 0 }
+      { q: "Quem se destaca no trabalho hoje é quem:", options: ["Aprende a usar as ferramentas a seu favor", "Recusa qualquer tecnologia", "Ignora treinamentos", "Faz tudo manualmente sempre"], answer: 0 },
+      { q: "Ao usar IA com dados de pacientes, o mais importante é:", options: ["Proteger a privacidade e seguir as regras da clínica", "Compartilhar tudo abertamente", "Salvar em sites públicos", "Não se preocupar"], answer: 0 },
+      { q: "Se a IA cometer um erro numa resposta, a responsabilidade de revisar é:", options: ["De quem usa a ferramenta (você)", "Só da IA", "De ninguém", "Do paciente"], answer: 0 }
     ] },
 
     "ate-g1": { mode: "auto", passScore: 70, questions: [
@@ -195,7 +197,9 @@ const COURSE = {
       { q: "Se o paciente pedir um documento fiscal, a secretária deve:", options: ["Encaminhar conforme o procedimento da clínica", "Recusar sem explicar", "Mandar embora", "Prometer o que não pode"], answer: 0 },
       { q: "Transparência nas informações financeiras gera no paciente:", options: ["Confiança", "Desconfiança", "Indiferença", "Irritação"], answer: 0 },
       { q: "Erros em cobrança ou informação fiscal podem causar:", options: ["Insatisfação e retrabalho", "Mais elogios", "Nada", "Aumento automático de vendas"], answer: 0 },
-      { q: "O conhecimento sobre impostos no atendimento deve ser usado para:", options: ["Orientar bem o paciente dentro das regras", "Burlar regras", "Confundir o paciente", "Evitar atender"], answer: 0 }
+      { q: "O conhecimento sobre impostos no atendimento deve ser usado para:", options: ["Orientar bem o paciente dentro das regras", "Burlar regras", "Confundir o paciente", "Evitar atender"], answer: 0 },
+      { q: "Antes de informar um valor ou imposto ao paciente, o ideal é:", options: ["Conferir a informação correta com o setor responsável", "Chutar para agilizar", "Arredondar como achar melhor", "Não informar"], answer: 0 },
+      { q: "Uma cobrança feita com clareza e transparência tende a gerar:", options: ["Confiança e menos conflitos", "Mais reclamações", "Desconfiança", "Indiferença"], answer: 0 }
     ] },
 
     "vid-g1": { mode: "auto", passScore: 70, questions: [

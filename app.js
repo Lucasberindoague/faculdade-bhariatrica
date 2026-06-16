@@ -23,6 +23,8 @@
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
   function isVideo(l) { return l.type === "youtube" || l.type === "playlist"; }
   function fmt(iso) { if (!iso) return ""; const d = new Date(iso); if (isNaN(d)) return iso; return String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0"); }
+  function parseDM(s) { const m = String(s).match(/(\d{1,2})[\/\-](\d{1,2})/); return m ? Number(m[2]) * 100 + Number(m[1]) : null; }
+  function lateCheck(dateStr, prazoStr) { const a = parseDM(dateStr), b = parseDM(prazoStr); return a != null && b != null && a > b; }
   function contentBadge(l) { if (isVideo(l)) return { t: "Vídeo", c: "badge-video" }; if (l.type === "pdf") return { t: "PDF / Doc", c: "badge-pdf" }; return { t: "Curso externo", c: "badge-link" }; }
 
   function assignedTo(id, u) { const ov = window.Store.getAssign(id, u); if (ov !== undefined && ov !== null) return ov; const i = lessonInfo(id); return !!(i && i.lesson.seed && (u in i.lesson.seed)); }
@@ -315,8 +317,9 @@
           if (l.tempoMin) { tempoTot += l.tempoMin; if (s.st === "concluida") tempoFeito += l.tempoMin; }
           let stHtml, act = "";
           if (s.st === "concluida") {
-            if (s.approved) stHtml = `<span class="tag-ok">✓ Aprovado</span>`;
-            else { stHtml = `<span class="tag-wait">Concluído ${s.date ? "em " + esc(s.date) : ""} · aguardando aprovação</span>`; act = `<button class="btn btn-primary btn-sm" data-approve="${l.id}">Aprovar</button>`; }
+            const lateTag = (s.date && l.prazo && lateCheck(s.date, l.prazo)) ? ` <span class="tag-late">⏰ atrasado</span>` : "";
+            if (s.approved) { stHtml = `<span class="tag-ok">✓ Aprovado</span>${lateTag}`; act = `<button class="mini-btn" data-unapprove="${l.id}">desfazer</button>`; }
+            else { stHtml = `<span class="tag-wait">Concluído ${s.date ? "em " + esc(s.date) : ""} · aguardando</span>${lateTag}`; act = `<button class="btn btn-primary btn-sm" data-approve="${l.id}">Aprovar</button>`; }
           } else stHtml = `<span class="tag-pend">Pendente</span>`;
           return `<tr><td>${esc(dname(l.id, l.title))}<div class="muted">${esc(dname(g.id, g.title))}</div></td><td>${stHtml}</td><td class="ta-c muted">${l.prazo ? "prazo " + esc(l.prazo) : "—"}</td><td class="ta-c muted">${l.tempoMin ? l.tempoMin + " min" : "—"}</td><td class="ta-c">${act}</td></tr>`;
         }).join("");
@@ -339,7 +342,7 @@
       const groups = t.groups.map(g => {
         const opts = trackOf(g.id).groups.map(gg => `<option value="${gg.id}">${esc(dname(gg.id, gg.title))}</option>`).join("");
         const rows = groupLessons(g.id).map(l => {
-          const chips = secs.map(s => `<button class="chip ${assignedTo(l.id, s.username) ? "on" : ""}" data-assign="${l.id}" data-user="${s.username}" title="${esc(s.name)}">${esc(s.name[0])}</button>`).join("");
+          const chips = secs.map(s => `<button class="chip ${assignedTo(l.id, s.username) ? "on" : ""}" data-assign="${l.id}" data-user="${s.username}" title="${esc(s.name)}">${esc(s.short || s.name[0])}</button>`).join("");
           const moveSel = `<select class="mini-sel" data-move="${l.id}">${trackOf(g.id).groups.map(gg => `<option value="${gg.id}" ${effGroup(l.id) === gg.id ? "selected" : ""}>${esc(dname(gg.id, gg.title))}</option>`).join("")}</select>`;
           return `<div class="man-lesson"><div class="man-l-main"><span class="man-l-title">${esc(dname(l.id, l.title))}</span> <button class="mini-btn" data-rename="lesson:${l.id}">✎</button></div>
             <div class="man-l-ctl"><span class="muted">mover:</span> ${moveSel} <span class="muted">atribuir:</span> <span class="chips">${chips}</span></div></div>`;
@@ -362,7 +365,10 @@
     if (App.view === "aula") mountAula();
     if (App.view === "prova") wireProva();
     if (App.view === "senha") wireChangePw(false);
-    if (App.view === "ficha") document.querySelectorAll("[data-approve]").forEach(el => el.onclick = () => { window.Store.setApproved(App.personId, el.getAttribute("data-approve"), true); render(); });
+    if (App.view === "ficha") {
+      document.querySelectorAll("[data-approve]").forEach(el => el.onclick = () => { window.Store.setApproved(App.personId, el.getAttribute("data-approve"), true); render(); });
+      document.querySelectorAll("[data-unapprove]").forEach(el => el.onclick = () => { window.Store.setApproved(App.personId, el.getAttribute("data-unapprove"), false); render(); });
+    }
     if (App.view === "gerenciar") wireGerenciar();
   }
   function wireGerenciar() {
