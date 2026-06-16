@@ -128,6 +128,37 @@ strong{font-weight:700}
 .prova-unlocked{background:var(--ok-bg);color:var(--brand-dark);border:1px solid var(--brand);border-radius:12px;padding:12px 14px;font-weight:700;margin-bottom:10px}
 .file-warn{background:#fff8e6;border:1px solid #ffe6a8;color:#9a6b00;border-radius:12px;padding:12px 16px;font-size:.9rem;margin-bottom:14px}
 
+/* agrupamentos */
+.group-block{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px 18px;margin-top:18px;box-shadow:var(--shadow-sm)}
+.group-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.group-head h3{margin:0;font-size:1.1rem}
+
+/* ficha do gestor */
+.ficha-track{margin:22px 0 6px;font-size:1.15rem}
+.tally{display:flex;justify-content:space-between;gap:16px;background:var(--brand-light);border:1px solid var(--border);border-radius:14px;padding:14px 18px;margin:14px 0;flex-wrap:wrap}
+.tally-num{font-size:1.5rem;font-weight:800;color:var(--brand-dark)}
+.tag-ok{background:var(--ok-bg);color:var(--brand-dark);font-weight:700;font-size:.8rem;padding:3px 10px;border-radius:99px}
+.tag-wait{background:#fff4d6;color:#9a6b00;font-weight:700;font-size:.8rem;padding:3px 10px;border-radius:99px}
+.tag-pend{background:#eef1f0;color:#6b7c76;font-weight:700;font-size:.8rem;padding:3px 10px;border-radius:99px}
+.tag-warn{background:#fde7e7;color:#c0392b;font-weight:800;padding:2px 9px;border-radius:99px}
+
+/* gerenciar */
+.man-track{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px 18px;margin-top:16px;box-shadow:var(--shadow-sm)}
+.man-t-head{display:flex;align-items:center;gap:12px;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:8px}
+.man-t-head h3{margin:0}
+.man-group{margin:10px 0 14px;padding-left:6px}
+.man-g-head{display:flex;align-items:center;gap:10px;margin-bottom:6px;color:var(--brand-dark)}
+.man-lesson{display:flex;flex-direction:column;gap:6px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;background:#fbfdfc}
+.man-l-main{display:flex;align-items:center;gap:8px}
+.man-l-title{font-weight:600}
+.man-l-ctl{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.85rem}
+.mini-btn{background:transparent;border:1px solid var(--border);border-radius:8px;padding:2px 8px;cursor:pointer;font:inherit;font-size:.8rem;color:var(--brand-dark)}
+.mini-btn:hover{border-color:var(--brand);background:var(--brand-light)}
+.mini-sel{font:inherit;font-size:.82rem;padding:4px 8px;border:1px solid var(--border);border-radius:8px;background:#fff}
+.chips{display:inline-flex;gap:4px;flex-wrap:wrap}
+.chip{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:#fff;color:var(--muted);font-weight:800;cursor:pointer;font-size:.8rem}
+.chip.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+
 /* ---------- tabelas ---------- */
 .grid-table{width:100%;border-collapse:separate;border-spacing:0;margin-top:18px;background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden}
 .grid-table th{background:var(--brand-light);color:var(--brand-dark);text-align:left;font-size:.82rem;padding:12px 14px}
