@@ -8,6 +8,8 @@
    Firebase para elas também (próximo passo).
    ============================================================ */
 const Store = (function () {
+  // ⚠️ NÃO MUDE esta chave nem os ids de usuário/aula: isso preserva o
+  //    progresso e as senhas das secretárias quando você sobe atualizações.
   const DB_KEY = "BHAR_DB_v3";
   const { users: USERS, defaultPassword: DEFAULT_PASSWORD } = window.COURSE;
   const useFirebase = (typeof FIREBASE_READY !== "undefined") && FIREBASE_READY;
@@ -53,6 +55,10 @@ const Store = (function () {
     login(u, p) { u = (u || "").trim().toLowerCase(); const x = db.users[u]; if (!x || x.pass !== hash(p)) return null; return { username: u, nome: x.nome, role: x.role, mustChange: !!x.mustChange }; },
     changePassword(u, np) { const x = db.users[u]; if (!x) return false; x.pass = hash(np); x.mustChange = false; save(); return true; },
     needsPasswordChange(u) { return !!(db.users[u] && db.users[u].mustChange); },
+    /* "Esqueci minha senha" (modo local): volta para a senha padrão e força criar uma nova.
+       Com o Firebase Auth ligado, isto vira o envio de e-mail de redefinição. */
+    resetToDefault(u) { u = (u || "").trim().toLowerCase(); const x = db.users[u]; if (!x) return false; x.pass = hash(DEFAULT_PASSWORD); x.mustChange = true; save(); return true; },
+    emailOf(u) { const x = USERS.find(y => y.username === u); return x ? (x.email || "") : ""; },
 
     /* progresso ao vivo */
     getLesson(u, id) { return (db.progress[u] && db.progress[u][id]) || null; },

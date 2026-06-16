@@ -33,6 +33,8 @@ strong{font-weight:700}
 .auth-title{font-size:1.7rem;margin:0 0 4px;font-weight:800}
 .auth-sub{margin:0 0 22px;color:var(--muted);font-size:.95rem}
 .auth-hint{margin-top:18px;font-size:.82rem;color:var(--muted);background:var(--brand-light);padding:12px 14px;border-radius:12px}
+.link-btn{display:block;width:100%;text-align:center;background:transparent;border:0;color:var(--brand);font:inherit;font-size:.85rem;font-weight:600;cursor:pointer;margin-top:10px;text-decoration:underline}
+#forgot-box{margin-top:10px;padding:12px;border:1px dashed var(--brand-2);border-radius:12px}
 .field{margin-bottom:16px}
 .field label{display:block;font-size:.85rem;font-weight:600;margin-bottom:6px;color:var(--ink)}
 .field input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:12px;font:inherit;background:#fbfdfc;transition:.15s}

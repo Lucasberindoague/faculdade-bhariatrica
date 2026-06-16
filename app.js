@@ -80,6 +80,12 @@
       <div class="field"><label>Senha</label><input id="lg-pass" type="password" autocomplete="current-password" placeholder="Sua senha" /></div>
       <div id="lg-err" class="form-err" hidden></div>
       <button id="lg-btn" class="btn btn-primary btn-block">Entrar</button>
+      <button id="forgot-link" class="link-btn">Esqueci minha senha</button>
+      <div id="forgot-box" hidden>
+        <div class="field"><label>Seu usuário</label><input id="fg-user" type="text" placeholder="ex.: lucila"></div>
+        <div id="fg-msg" class="form-ok" hidden></div>
+        <button id="fg-btn" class="btn btn-ghost btn-block">Redefinir minha senha</button>
+      </div>
       <p class="auth-hint">Primeiro acesso? Use a senha padrão informada pelo Lucas. O sistema vai pedir para você criar a sua própria.</p></div></div>`;
     const submit = async () => {
       const user = window.Store.login(document.getElementById("lg-user").value, document.getElementById("lg-pass").value);
@@ -92,6 +98,13 @@
     };
     document.getElementById("lg-btn").onclick = submit;
     document.getElementById("lg-pass").addEventListener("keydown", e => { if (e.key === "Enter") submit(); });
+    document.getElementById("forgot-link").onclick = () => { const b = document.getElementById("forgot-box"); b.hidden = !b.hidden; };
+    document.getElementById("fg-btn").onclick = () => {
+      const u = (document.getElementById("fg-user").value || "").trim().toLowerCase();
+      const msg = document.getElementById("fg-msg"); msg.hidden = false;
+      if (window.Store.resetToDefault(u)) { msg.className = "form-ok"; msg.innerHTML = "Pronto! Sua senha voltou para a <strong>padrão</strong>. Entre com ela e crie uma nova."; }
+      else { msg.className = "form-err"; msg.textContent = "Usuário não encontrado. Confira com o Lucas."; }
+    };
     document.getElementById("lg-user").focus();
   }
 

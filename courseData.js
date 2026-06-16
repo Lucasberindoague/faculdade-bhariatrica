@@ -22,13 +22,13 @@ const COURSE = {
   defaultPassword: "bar@123321",
 
   users: [
-    { username: "lucas",   name: "Lucas",   role: "admin", password: "admin@bhar25" },
-    { username: "joelma",  name: "Joelma",  role: "secretaria", short: "Jo" },
-    { username: "bia",     name: "Bia",     role: "secretaria", short: "Bi" },
-    { username: "tairine", name: "Tairine", role: "secretaria", short: "Tr" },
-    { username: "taina",   name: "Tainá",   role: "secretaria", short: "Tn" },
-    { username: "mikaeli", name: "Mikaeli", role: "secretaria", short: "Mi" },
-    { username: "lucila",  name: "Lucila",  role: "secretaria", short: "Lu" }
+    { username: "lucas",   name: "Lucas",   role: "admin",      email: "gerencia@bhariatrica.com.br", password: "admin@bhar25" },
+    { username: "joelma",  name: "Joelma",  role: "secretaria", short: "Jo", email: "joelma.bhariatrica@gmail.com" },
+    { username: "bia",     name: "Bia",     role: "secretaria", short: "Bi", email: "bianca.bhariatrica@gmail.com" },
+    { username: "tairine", name: "Tairine", role: "secretaria", short: "Tr", email: "tairini.bhariatrica@gmail.com" },
+    { username: "taina",   name: "Tainá",   role: "secretaria", short: "Tn", email: "thayna.bhariatrica@gmail.com" },
+    { username: "mikaeli", name: "Mikaeli", role: "secretaria", short: "Mi", email: "micaelle.bhariatrica@gmail.com" },
+    { username: "lucila",  name: "Lucila",  role: "secretaria", short: "Lu", email: "lucila.bhariatrica@gmail.com" }
   ],
 
   tracks: [
