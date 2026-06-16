@@ -1,22 +1,17 @@
 /* ============================================================
-   CONFIGURAÇÃO DO FIREBASE
+   CONFIGURAÇÃO DO FIREBASE — Projeto: Faculdade Bhariatrica
    ------------------------------------------------------------
-   Enquanto este arquivo estiver com os valores "COLE_AQUI",
-   a plataforma roda em MODO LOCAL (o progresso fica só no
-   navegador). Isso é ótimo para testar.
-
-   Para LIGAR o painel central (você ver a % de todas as
-   secretárias de qualquer lugar), siga o README e cole abaixo
-   a configuração do seu projeto Firebase.
+   Painel central LIGADO. Esta config Web é pública por design
+   (a segurança vem das regras do Firestore + login anônimo).
    ============================================================ */
 
 const FIREBASE_CONFIG = {
-  apiKey:            "COLE_AQUI",
-  authDomain:        "COLE_AQUI",
-  projectId:         "COLE_AQUI",
-  storageBucket:     "COLE_AQUI",
-  messagingSenderId: "COLE_AQUI",
-  appId:             "COLE_AQUI",
+  apiKey:            "AIzaSyDcarg46j00SJERTlv4lbCqZiBa4gzuo3M",
+  authDomain:        "faculdade-bhariatrica.firebaseapp.com",
+  projectId:         "faculdade-bhariatrica",
+  storageBucket:     "faculdade-bhariatrica.firebasestorage.app",
+  messagingSenderId: "431699196170",
+  appId:             "1:431699196170:web:0ed0e0070d50d3072d22f3",
 };
 
 // Não precisa mexer aqui:

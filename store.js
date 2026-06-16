@@ -33,8 +33,11 @@ const Store = (function () {
     if (!useFirebase) return;
     try {
       await loadScript("https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js");
+      await loadScript("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js");
       await loadScript("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js");
-      firebase.initializeApp(FIREBASE_CONFIG); fdb = firebase.firestore();
+      firebase.initializeApp(FIREBASE_CONFIG);
+      await firebase.auth().signInAnonymously();   // exige "Anônimo" ativado na Authentication
+      fdb = firebase.firestore();
     } catch (e) { console.warn("Firebase indisponível — modo local.", e); fdb = null; }
   }
   function pushUser(username) {
