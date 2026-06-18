@@ -24,10 +24,10 @@ const COURSE = {
   users: [
     { username: "lucas",   name: "Lucas",   role: "admin",      email: "gerencia@bhariatrica.com.br", password: "admin@bhar25" },
     { username: "joelma",  name: "Joelma",  role: "secretaria", short: "Jo", email: "joelma.bhariatrica@gmail.com" },
-    { username: "bia",     name: "Bia",     role: "secretaria", short: "Bi", email: "bianca.bhariatrica@gmail.com" },
+    { username: "bianca",  name: "Bianca",  role: "secretaria", short: "Bi", email: "bianca.bhariatrica@gmail.com" },
     { username: "tairine", name: "Tairine", role: "secretaria", short: "Tr", email: "tairini.bhariatrica@gmail.com" },
-    { username: "taina",   name: "Tainá",   role: "secretaria", short: "Tn", email: "thayna.bhariatrica@gmail.com" },
-    { username: "mikaeli", name: "Mikaeli", role: "secretaria", short: "Mi", email: "micaelle.bhariatrica@gmail.com" },
+    { username: "thaina",  name: "Thainá",  role: "secretaria", short: "Tn", email: "thayna.bhariatrica@gmail.com" },
+    { username: "mikaelle", name: "Mikaelle", role: "secretaria", short: "Mi", email: "micaelle.bhariatrica@gmail.com" },
     { username: "lucila",  name: "Lucila",  role: "secretaria", short: "Lu", email: "lucila.bhariatrica@gmail.com" }
   ],
 
@@ -38,9 +38,9 @@ const COURSE = {
       groups: [
         { id: "sis-g1", title: "Agenda, Recepção e AmigoFlow", lessons: [
           { id: "sis-1", title: "Trilha Agenda e Recepção", type: "external", url: "https://amigoacademy.com.br/play/curso/6654131", platform: "Amigo Academy", tempoMin: null, prazo: "20/03",
-            seed: { joelma: "20/03", bia: "27/03", tairine: "04/03", taina: "13/05", mikaeli: "05/06", lucila: "x" } },
+            seed: { joelma: "20/03", bianca: "27/03", tairine: "04/03", thaina: "13/05", mikaelle: "05/06", lucila: "x" } },
           { id: "sis-2", title: "Trilha AmigoFlow", type: "external", url: "https://amigoacademy.com.br/play/curso/6654131", platform: "Amigo Academy", tempoMin: null, prazo: "27/03",
-            seed: { joelma: "02/04", bia: "27/03", tairine: "27/03", taina: "13/05", mikaeli: "05/06", lucila: "27/05" } }
+            seed: { joelma: "02/04", bianca: "27/03", tairine: "27/03", thaina: "13/05", mikaelle: "05/06", lucila: "27/05" } }
         ] }
       ]
     },
@@ -50,23 +50,23 @@ const COURSE = {
       groups: [
         { id: "com-g1", title: "Boas-Vindas (Amigo Academy)", lessons: [
           { id: "com-1", title: "Boas-Vindas", type: "external", url: "https://amigoacademy.com.br/play/curso/6654131", platform: "Amigo Academy", obs: "Até o vídeo 7.", tempoMin: null, prazo: "27/03",
-            seed: { mikaeli: "05/06", lucila: "24/03" } }
+            seed: { mikaelle: "05/06", lucila: "24/03" } }
         ] },
         { id: "com-g2", title: "Vendas EAD — Full Sales System", lessons: [
           { id: "com-2", title: "EAD – SDR / Setters", type: "external", url: "https://fullsalessystem.curseduca.pro/m/lessons/ead-de-sdrsetters1774014708711", platform: "Full Sales System", obs: "Módulos 1 e 2.", tempoMin: null, prazo: "27/03",
-            seed: { tairine: "x", mikaeli: "12/06", lucila: "01/04" } },
+            seed: { tairine: "x", mikaelle: "12/06", lucila: "01/04" } },
           { id: "com-3", title: "EAD – Closer", type: "external", url: "https://fullsalessystem.curseduca.pro/m/lessons/ead-closer1772537769478", platform: "Full Sales System", obs: "Módulos 1 e 2.", tempoMin: null, prazo: "01/04",
-            seed: { taina: "x", mikaeli: "12/06", lucila: "21/05" } },
+            seed: { thaina: "x", mikaelle: "12/06", lucila: "21/05" } },
           { id: "com-4", title: "Trilha de Social Selling", type: "external", url: "https://fullsalessystem.curseduca.pro/m/lessons/ead-social-selling1772537933825", platform: "Full Sales System", obs: "Ver os vídeos de 1 a 6.", tempoMin: null, prazo: "20/03",
-            seed: { tairine: "26/03", mikaeli: "x", lucila: "20/03" } }
+            seed: { tairine: "26/03", mikaelle: "x", lucila: "20/03" } }
         ] },
         { id: "com-g3", title: "Técnica de SPIN Selling", lessons: [
           { id: "com-6", title: "Técnica de SPIN Selling", type: "pdf", url: "https://www.rdstation.com/blog/vendas/spin-selling/", platform: "RD Station (artigo)", tempoMin: null, prazo: "05/06",
-            seed: { bia: "20/05", tairine: "29/04", taina: "x", mikaeli: "x", lucila: "x" } }
+            seed: { bianca: "20/05", tairine: "29/04", thaina: "x", mikaelle: "x", lucila: "x" } }
         ] },
         { id: "com-g4", title: "IA no Atendimento (Trilha Claude)", lessons: [
           { id: "com-5", title: "Trilha Claude (IA)", type: "playlist", videoId: "h7BzuuFIHIY", listId: "PLp8AftP4p8Fv4lnKoA4hiMGjY6pACpgr-", obs: "Ver toda a trilha lateral (playlist).", tempoMin: null, prazo: "05/06",
-            seed: { joelma: "05/06", bia: "x", tairine: "x", taina: "x", mikaeli: "x", lucila: "x" } }
+            seed: { joelma: "05/06", bianca: "x", tairine: "x", thaina: "x", mikaelle: "x", lucila: "x" } }
         ] }
       ]
     },
@@ -76,7 +76,7 @@ const COURSE = {
       groups: [
         { id: "rec-g1", title: "Recepção de Clínica (iClinic)", lessons: [
           { id: "rec-1", title: "iClinic – Curso para Recepcionista", type: "external", url: "https://cursos.iclinic.com.br/courses/take/curso-para-recepcionista-de-clinica/lessons/4595759-importancia-da-secretaria-e-seus-desafios", platform: "iClinic", tempoMin: 90, prazo: "02/04",
-            seed: { joelma: "08/04", bia: "10/04", tairine: "08/04", taina: "14/05", mikaeli: "x", lucila: "03/06" } }
+            seed: { joelma: "08/04", bianca: "10/04", tairine: "08/04", thaina: "14/05", mikaelle: "x", lucila: "03/06" } }
         ] }
       ]
     },
@@ -86,21 +86,21 @@ const COURSE = {
       groups: [
         { id: "ate-g1", title: "Fluxograma de Atendimento", lessons: [
           { id: "ate-1", title: "Fluxograma – Parte 1", type: "youtube", videoId: "hc9VP174-2U", tempoMin: 4, prazo: "10/04",
-            seed: { joelma: "10/04", bia: "10/04", tairine: "10/04", taina: "14/05", mikaeli: "x", lucila: "01/06" } },
+            seed: { joelma: "10/04", bianca: "10/04", tairine: "10/04", thaina: "14/05", mikaelle: "x", lucila: "01/06" } },
           { id: "ate-2", title: "Fluxograma – Parte 2", type: "youtube", videoId: "GnynbfUuvco", tempoMin: 10, prazo: "10/04",
-            seed: { joelma: "10/04", bia: "10/04", tairine: "10/04", taina: "14/05", mikaeli: "x", lucila: "08/06" } },
+            seed: { joelma: "10/04", bianca: "10/04", tairine: "10/04", thaina: "14/05", mikaelle: "x", lucila: "08/06" } },
           { id: "ate-3", title: "Fluxograma – Parte 3", type: "youtube", videoId: "X3fKg3LNP5Q", tempoMin: 10, prazo: "10/04",
-            seed: { joelma: "10/04", bia: "10/04", tairine: "10/04", taina: "15/05", mikaeli: "x", lucila: "11/06" } },
+            seed: { joelma: "10/04", bianca: "10/04", tairine: "10/04", thaina: "15/05", mikaelle: "x", lucila: "11/06" } },
           { id: "ate-7", title: "Fluxograma – Vídeo complementar", type: "youtube", videoId: "MyyZJFQ-pss", tempoMin: null, prazo: "05/06",
-            seed: { bia: "02/06", tairine: "12/05", mikaeli: "x", lucila: "x" } },
+            seed: { bianca: "02/06", tairine: "12/05", mikaelle: "x", lucila: "x" } },
           { id: "ate-6", title: "Fluxograma (Mapa no Miro)", type: "external", url: "https://miro.com/app/board/uXjVGkzgEOk=/", platform: "Miro", obs: "Leitura completa do fluxo. Cada 'barra' corresponde a um conteúdo dentro do Amigo Flow — acesse o Amigo Flow, procure pelo nome de cada barra e leia individualmente.", tempoMin: 20, prazo: "30/04",
-            seed: { joelma: "30/04", bia: "29/04", tairine: "29/04", taina: "15/05", mikaeli: "x", lucila: "11/06" } }
+            seed: { joelma: "30/04", bianca: "29/04", tairine: "29/04", thaina: "15/05", mikaelle: "x", lucila: "11/06" } }
         ] },
         { id: "ate-g2", title: "Impostos no Atendimento", lessons: [
           { id: "ate-4", title: "Impostos – Parte 1", type: "youtube", videoId: "MUAs7U7-6ug", tempoMin: 20, prazo: "17/10",
-            seed: { joelma: "15/04", bia: "10/04", tairine: "17/04", taina: "15/05", lucila: "11/06" } },
+            seed: { joelma: "15/04", bianca: "10/04", tairine: "17/04", thaina: "15/05", lucila: "11/06" } },
           { id: "ate-5", title: "Impostos – Parte 2", type: "youtube", videoId: "85WrCtQS0vg", tempoMin: 20, prazo: "17/10",
-            seed: { joelma: "15/04", bia: "10/04", tairine: "17/04", taina: "15/05", lucila: "11/06" } }
+            seed: { joelma: "15/04", bianca: "10/04", tairine: "17/04", thaina: "15/05", lucila: "11/06" } }
         ] }
       ]
     },
@@ -110,13 +110,13 @@ const COURSE = {
       groups: [
         { id: "vid-g1", title: "Orientação ao Paciente", lessons: [
           { id: "pac-1", title: "Pré 1ª consulta", type: "youtube", videoId: "R_3TGgk2MSA", tempoMin: null, prazo: "05/06",
-            seed: { joelma: "x", bia: "x", tairine: "02/06", taina: "x", mikaeli: "x", lucila: "x" } },
+            seed: { joelma: "x", bianca: "x", tairine: "02/06", thaina: "x", mikaelle: "x", lucila: "x" } },
           { id: "pac-2", title: "Pós primeira consulta", type: "youtube", videoId: "MK0yqBvx_Ag", tempoMin: null, prazo: "05/06",
-            seed: { joelma: "x", bia: "x", tairine: "x", taina: "x", mikaeli: "x", lucila: "x" } },
+            seed: { joelma: "x", bianca: "x", tairine: "x", thaina: "x", mikaelle: "x", lucila: "x" } },
           { id: "pac-3", title: "Noripurum", type: "youtube", videoId: "GbpzfbxyLTk", tempoMin: null, prazo: "05/06",
-            seed: { joelma: "x", bia: "x", tairine: "x", taina: "x", mikaeli: "x", lucila: "x" } },
+            seed: { joelma: "x", bianca: "x", tairine: "x", thaina: "x", mikaelle: "x", lucila: "x" } },
           { id: "pac-4", title: "Orientações pós vesícula", type: "youtube", videoId: "rQYdz5UyGfE", tempoMin: null, prazo: "05/06",
-            seed: { joelma: "x", bia: "x", tairine: "x", taina: "x", mikaeli: "x", lucila: "x" } }
+            seed: { joelma: "x", bianca: "x", tairine: "x", thaina: "x", mikaelle: "x", lucila: "x" } }
         ] }
       ]
     },
