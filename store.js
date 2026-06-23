@@ -21,7 +21,7 @@ const Store = (function () {
   function save() { try { localStorage.setItem(DB_KEY, JSON.stringify(db)); } catch (e) {} }
   function ensureUsers() {
     USERS.forEach(u => {
-      if (!db.users[u.username]) db.users[u.username] = { nome: u.name, role: u.role, pass: hash(u.password || DEFAULT_PASSWORD), mustChange: u.role === "secretaria" };
+      if (!db.users[u.username]) db.users[u.username] = { nome: u.name, role: u.role, pass: hash(u.password || DEFAULT_PASSWORD), mustChange: false };
       else { db.users[u.username].nome = u.name; db.users[u.username].role = u.role; }
     });
     save();
@@ -61,7 +61,10 @@ const Store = (function () {
     },
 
     /* auth */
-    login(u, p) { u = (u || "").trim().toLowerCase(); const x = db.users[u]; if (!x || x.pass !== hash(p)) return null; return { username: u, nome: x.nome, role: x.role, mustChange: !!x.mustChange }; },
+    /* Secretária entra só com o usuário (sem senha, modo teste). Gestor exige senha. */
+    login(u, p) { u = (u || "").trim().toLowerCase(); const x = db.users[u]; if (!x) return null; if (x.role !== "secretaria" && x.pass !== hash(p)) return null; return { username: u, nome: x.nome, role: x.role, mustChange: false }; },
+    /* confere a senha do gestor (usada para liberar a prova) */
+    verifyGestor(pw) { const a = USERS.find(y => y.role === "admin"); const x = a && db.users[a.username]; return !!(x && x.pass === hash(pw)); },
     changePassword(u, np) { const x = db.users[u]; if (!x) return false; x.pass = hash(np); x.mustChange = false; save(); return true; },
     needsPasswordChange(u) { return !!(db.users[u] && db.users[u].mustChange); },
     /* "Esqueci minha senha" (modo local): volta para a senha padrão e força criar uma nova.

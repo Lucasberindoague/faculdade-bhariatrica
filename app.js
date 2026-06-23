@@ -46,8 +46,9 @@
   function trackAssigned(u, t) { return t.groups.some(g => userGroupLessons(u, g.id).length > 0); }
   function trackStats(u, t) { let tot = 0, dn = 0; t.groups.forEach(g => { const s = groupStats(u, g.id); tot += s.total; dn += s.done; }); return { total: tot, done: dn, pct: tot ? Math.round(dn / tot * 100) : 0 }; }
   function overall(u) { let tot = 0, dn = 0; TRACKS.filter(t => !t.locked).forEach(t => { const s = trackStats(u, t); tot += s.total; dn += s.done; }); return { total: tot, done: dn, pct: tot ? Math.round(dn / tot * 100) : 0 }; }
-  function quizFor(gid) { const q = QUIZZES[gid]; return q || null; }
-  function quizReady(gid) { const q = QUIZZES[gid]; return !!(q && q.mode === "auto" && q.questions && q.questions.length); }
+  function quizFor(gid) { const g = groupById(gid); if (g && g.quiz && g.quiz.questions && g.quiz.questions.length) return g.quiz; const q = QUIZZES[gid]; return q || null; }
+  function quizReady(gid) { const g = groupById(gid); if (g && g.quiz && g.quiz.questions && g.quiz.questions.length) return true; const q = QUIZZES[gid]; return !!(q && q.mode === "auto" && q.questions && q.questions.length); }
+  function provaCount(gid) { const q = quizFor(gid); return q && q.questions ? q.questions.length : 0; }
   function bar(p) { return `<div class="progress-bar"><div class="progress-fill" style="width:${p}%"></div></div>`; }
 
   /* ---------- YouTube ---------- */
@@ -55,7 +56,7 @@
   function stopPlayer() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } if (player && player.destroy) { try { player.destroy(); } catch (e) {} } player = null; }
 
   /* ---------- navegação ---------- */
-  function go(v, p) { stopPlayer(); App.view = v; if (p) { ["trackId", "groupId", "lessonId", "personId"].forEach(k => { if (p[k] !== undefined) App[k] = p[k]; }); } render(); window.scrollTo(0, 0); }
+  function go(v, p) { stopPlayer(); App.provaOk = false; App.view = v; if (p) { ["trackId", "groupId", "lessonId", "personId"].forEach(k => { if (p[k] !== undefined) App[k] = p[k]; }); } render(); window.scrollTo(0, 0); }
   function logout() { App.user = null; go("login"); }
 
   function render() {
@@ -72,6 +73,7 @@
       case "admin": b = viewAdmin(); break;
       case "ficha": b = viewFicha(); break;
       case "gerenciar": b = viewGerenciar(); break;
+      case "editprova": b = viewEditProva(); break;
       default: b = App.user.role === "admin" ? viewAdmin() : viewTrilhas();
     }
     root.innerHTML = shell(b); wireHeader(); afterRender();
@@ -82,20 +84,14 @@
     root.innerHTML = `<div class="auth-wrap"><div class="auth-card">${brandBlock()}
       <h1 class="auth-title">Entrar</h1><p class="auth-sub">Plataforma de treinamento da equipe de secretaria</p>
       <div class="field"><label>Usuário</label><input id="lg-user" type="text" autocomplete="username" placeholder="ex.: lucila" /></div>
-      <div class="field"><label>Senha</label><input id="lg-pass" type="password" autocomplete="current-password" placeholder="Sua senha" /></div>
+      <div class="field"><label>Senha <span class="muted" style="font-weight:400">(só o gestor)</span></label><input id="lg-pass" type="password" autocomplete="current-password" placeholder="secretárias deixam em branco" /></div>
       <div id="lg-err" class="form-err" hidden></div>
       <button id="lg-btn" class="btn btn-primary btn-block">Entrar</button>
-      <button id="forgot-link" class="link-btn">Esqueci minha senha</button>
-      <div id="forgot-box" hidden>
-        <div class="field"><label>Seu usuário</label><input id="fg-user" type="text" placeholder="ex.: lucila"></div>
-        <div id="fg-msg" class="form-ok" hidden></div>
-        <button id="fg-btn" class="btn btn-ghost btn-block">Redefinir minha senha</button>
-      </div>
-      <p class="auth-hint">Primeiro acesso? Use a senha padrão informada pelo Lucas. O sistema vai pedir para você criar a sua própria.</p></div></div>`;
+      <p class="auth-hint"><strong>Secretária:</strong> digite só o seu usuário (ex.: lucila) e clique em Entrar. <strong>Gestor:</strong> usuário + senha.</p></div></div>`;
     const submit = async () => {
       const user = window.Store.login(document.getElementById("lg-user").value, document.getElementById("lg-pass").value);
       const err = document.getElementById("lg-err");
-      if (!user) { err.hidden = false; err.textContent = "Usuário ou senha incorretos."; return; }
+      if (!user) { err.hidden = false; err.textContent = "Não entrou. Confira o usuário (e a senha, se for gestor)."; return; }
       App.user = user;
       if (user.mustChange) { App.view = "change-required"; render(); return; }
       if (window.Store.mode === "firebase") { try { await window.Store.pullUser(user.username); } catch (e) {} }
@@ -103,13 +99,6 @@
     };
     document.getElementById("lg-btn").onclick = submit;
     document.getElementById("lg-pass").addEventListener("keydown", e => { if (e.key === "Enter") submit(); });
-    document.getElementById("forgot-link").onclick = () => { const b = document.getElementById("forgot-box"); b.hidden = !b.hidden; };
-    document.getElementById("fg-btn").onclick = () => {
-      const u = (document.getElementById("fg-user").value || "").trim().toLowerCase();
-      const msg = document.getElementById("fg-msg"); msg.hidden = false;
-      if (window.Store.resetToDefault(u)) { msg.className = "form-ok"; msg.innerHTML = "Pronto! Sua senha voltou para a <strong>padrão</strong>. Entre com ela e crie uma nova."; }
-      else { msg.className = "form-err"; msg.textContent = "Usuário não encontrado. Confira com o Lucas."; }
-    };
     document.getElementById("lg-user").focus();
   }
 
@@ -272,19 +261,34 @@
   /* ---------- PROVA (por agrupamento) ---------- */
   function viewProva() {
     const g = groupById(App.groupId); if (!g) return viewTrilhas();
-    const q = QUIZZES[g.id], u = App.user.username;
-    if (!quizReady(g.id)) return `<button class="back" data-back-group="${g.id}">‹ Voltar</button><div class="empty"><h2>Prova em preparação</h2><p>A prova deste agrupamento será disponibilizada pelo gestor.</p></div>`;
+    const q = quizFor(g.id), u = App.user.username;
+    if (!q || !q.questions || !q.questions.length) return `<button class="back" data-back-group="${g.id}">‹ Voltar</button><div class="empty"><h2>Prova em preparação</h2><p>A prova deste agrupamento será disponibilizada pelo gestor.</p></div>`;
     const ls = userGroupLessons(u, g.id);
     if (!(ls.length && ls.every(l => lessonState(u, l).st === "concluida"))) return `<button class="back" data-back-group="${g.id}">‹ Voltar</button><div class="empty"><h2>🔒 Prova bloqueada</h2><p>Conclua todos os vídeos do agrupamento para liberar a prova.</p></div>`;
+    if (!App.provaOk && App.user.role !== "admin") {
+      return `<button class="back" data-back-group="${g.id}">‹ Voltar</button><h1 class="page-title">Prova — ${esc(g.title)}</h1>
+        <div class="exam-gate"><p>🔒 Esta prova só é liberada pelo <strong>gestor</strong>. Peça ao Lucas para digitar a senha dele agora.</p>
+        <div class="field"><label>Senha do gestor</label><input id="gate-pw" type="password" placeholder="senha do gestor"></div>
+        <div id="gate-err" class="form-err" hidden></div>
+        <button class="btn btn-primary" id="gate-btn">Liberar prova</button></div>`;
+    }
     const pass = q.passScore || 70;
     const items = q.questions.map((qq, i) => `<div class="quiz-q" data-q="${i}"><div class="quiz-enun"><span>${i + 1}.</span> ${esc(qq.q)}</div><div class="quiz-opts">${qq.options.map((o, j) => `<label class="quiz-opt"><input type="radio" name="q${i}" value="${j}"><span>${esc(o)}</span></label>`).join("")}</div></div>`).join("");
-    return `<button class="back" data-back-group="${g.id}">‹ Voltar</button><h1 class="page-title">Prova — ${esc(dname(g.id, g.title))}</h1>
-      <p class="page-sub">Responda todas. Nota mínima: <strong>${pass}%</strong>.</p><div class="draft-flag">✎ Prova em rascunho — pode ser revisada pelo gestor.</div>
+    return `<button class="back" data-back-group="${g.id}">‹ Voltar</button><h1 class="page-title">Prova — ${esc(g.title)}</h1>
+      <p class="page-sub">Responda todas. Nota mínima: <strong>${pass}%</strong>.</p>
       <div class="quiz">${items}</div><div id="quiz-result" class="quiz-result" hidden></div><button class="btn btn-primary btn-block" id="quiz-submit">Enviar respostas</button>`;
   }
   function wireProva() {
-    const g = groupById(App.groupId); if (!g || !quizReady(g.id)) return;
-    const q = QUIZZES[g.id], u = App.user.username, pass = q.passScore || 70;
+    const g = groupById(App.groupId); if (!g) return;
+    const q = quizFor(g.id); if (!q || !q.questions || !q.questions.length) return;
+    const u = App.user.username, pass = q.passScore || 70;
+    const gate = document.getElementById("gate-btn");
+    if (gate) {
+      const tryUnlock = () => { const pw = document.getElementById("gate-pw").value, err = document.getElementById("gate-err"); if (window.Store.verifyGestor(pw)) { App.provaOk = true; render(); } else { err.hidden = false; err.textContent = "Senha do gestor incorreta."; } };
+      gate.onclick = tryUnlock;
+      document.getElementById("gate-pw").addEventListener("keydown", e => { if (e.key === "Enter") tryUnlock(); });
+      return;
+    }
     const btn = document.getElementById("quiz-submit"); if (!btn) return;
     btn.onclick = () => {
       let answered = 0, correct = 0;
@@ -364,7 +368,7 @@
           return `<div class="man-lesson"><div class="man-l-main"><span class="man-l-title">${esc(l.title)}</span> <button class="mini-btn" data-rename="lesson:${l.id}" title="renomear">✎</button> <button class="mini-btn del" data-del="lesson:${l.id}" title="excluir">🗑</button></div>
             <div class="man-l-ctl"><span class="muted">mover p/:</span> ${moveSel} <span class="muted">quem vê:</span> <span class="chips">${chips}</span></div></div>`;
         }).join("");
-        return `<div class="man-group"><div class="man-g-head"><strong>${esc(g.title)}</strong> <button class="mini-btn" data-rename="group:${g.id}" title="renomear">✎</button> <button class="mini-btn del" data-del="group:${g.id}" title="excluir">🗑</button> <button class="mini-btn add" data-addvideo="${g.id}">+ vídeo</button></div>
+        return `<div class="man-group"><div class="man-g-head"><strong>${esc(g.title)}</strong> <button class="mini-btn" data-rename="group:${g.id}" title="renomear">✎</button> <button class="mini-btn del" data-del="group:${g.id}" title="excluir">🗑</button> <button class="mini-btn add" data-addvideo="${g.id}">+ vídeo</button> <button class="mini-btn" data-editprova="${g.id}">📝 prova (${provaCount(g.id)})</button></div>
           ${lessonsHtml || '<p class="muted" style="padding:6px">sem vídeos ainda</p>'}
           <div class="add-lesson-form" data-addform="${g.id}" hidden>
             <input class="af" data-f="title" placeholder="Título do vídeo/conteúdo">
@@ -373,6 +377,7 @@
             <input class="af afp" data-f="prazo" placeholder="Prazo ex: 20/07">
             <input class="af afp" data-f="tempo" type="number" placeholder="Min">
             <button class="btn btn-primary btn-sm" data-addsave="${g.id}">Adicionar</button>
+            <div class="af-hint muted">📎 <strong>PDF / curso externo:</strong> cole o <strong>link</strong> (ex.: suba o PDF no Google Drive, marque "qualquer pessoa com o link pode ver" e cole aqui). <strong>Vídeo:</strong> cole o link do YouTube.</div>
           </div></div>`;
       }).join("");
       return `<div class="man-track"><div class="man-t-head"><h3>${t.icon || "📚"} ${esc(t.title)}${t.locked ? ' <span class="badge badge-soon">Em breve</span>' : ""}</h3>
@@ -387,12 +392,57 @@
   }
 
   /* ---------- pós-render ---------- */
+  /* ---------- ADMIN: editor de prova do agrupamento ---------- */
+  function viewEditProva() {
+    const g = groupById(App.groupId); if (!g) return viewGerenciar();
+    let quiz = g.quiz;
+    if (!quiz || !quiz.questions) { const leg = QUIZZES[g.id]; quiz = { passScore: 70, questions: (leg && leg.questions) ? leg.questions : [] }; }
+    const pass = quiz.passScore || 70;
+    const qs = quiz.questions || [];
+    const list = qs.map((qq, i) => `<div class="eq"><div class="eq-head"><span><strong>${i + 1}.</strong> ${esc(qq.q)}</span> <button class="mini-btn del" data-delq="${i}">🗑</button></div>
+      <ul class="eq-opts">${(qq.options || []).map((o, j) => `<li class="${j === qq.answer ? "correct" : ""}">${j === qq.answer ? "✔ " : ""}${esc(o)}</li>`).join("")}</ul></div>`).join("");
+    return `<button class="back" data-go="gerenciar">‹ Gerenciar</button>
+      <div class="page-head"><div><h1 class="page-title">📝 Prova — ${esc(g.title)}</h1><p class="page-sub">Monte as questões. Salva na nuvem e vale para as secretárias (que só fazem a prova com a sua senha).</p></div></div>
+      <div class="field" style="max-width:260px"><label>Nota mínima para aprovar (%)</label><input id="eq-pass" type="number" min="1" max="100" value="${pass}"></div>
+      <h3 class="ficha-track">Questões (${qs.length})</h3>
+      ${list || '<p class="muted">Nenhuma questão ainda — adicione a primeira abaixo.</p>'}
+      <div class="eq-form"><h3>Nova questão</h3>
+        <input id="nq-q" class="af" placeholder="Escreva a pergunta (enunciado)">
+        <div class="nq-opts">${[0, 1, 2, 3].map(j => `<label class="nq-opt"><input type="radio" name="nqc" value="${j}" ${j === 0 ? "checked" : ""}><input id="nq-o${j}" class="af" placeholder="Alternativa ${j + 1}"></label>`).join("")}</div>
+        <p class="muted">Marque a bolinha da alternativa <strong>correta</strong>. Deixe em branco as que não usar (mínimo 2).</p>
+        <button class="btn btn-primary" id="nq-add">+ Adicionar questão</button>
+      </div>`;
+  }
+  function wireEditProva() {
+    const g = groupById(App.groupId); if (!g) return;
+    const ensureQuiz = () => { if (!g.quiz) { const leg = QUIZZES[g.id]; g.quiz = { passScore: 70, questions: (leg && leg.questions) ? JSON.parse(JSON.stringify(leg.questions)) : [] }; } return g.quiz; };
+    const pi = document.getElementById("eq-pass");
+    if (pi) pi.onchange = () => { const q = ensureQuiz(); const v = Number(pi.value); if (v > 0 && v <= 100) { q.passScore = v; saveCourse(); } };
+    document.querySelectorAll("[data-delq]").forEach(el => el.onclick = () => { const q = ensureQuiz(); q.questions.splice(Number(el.getAttribute("data-delq")), 1); saveCourse(); });
+    const add = document.getElementById("nq-add");
+    if (add) add.onclick = () => {
+      const enun = (document.getElementById("nq-q").value || "").trim();
+      const opts = [0, 1, 2, 3].map(j => (document.getElementById("nq-o" + j).value || "").trim());
+      const corrSel = document.querySelector('input[name="nqc"]:checked');
+      const corr = corrSel ? Number(corrSel.value) : 0;
+      if (!enun) { alert("Escreva a pergunta."); return; }
+      if (opts.filter(o => o).length < 2) { alert("Preencha pelo menos 2 alternativas."); return; }
+      if (!opts[corr]) { alert("A alternativa marcada como CORRETA está vazia."); return; }
+      const used = []; let newCorr = 0;
+      opts.forEach((o, j) => { if (o) { if (j === corr) newCorr = used.length; used.push(o); } });
+      const q = ensureQuiz();
+      q.questions.push({ q: enun, options: used, answer: newCorr });
+      saveCourse();
+    };
+  }
+
   function afterRender() {
     document.querySelectorAll("[data-track]").forEach(el => el.onclick = () => go("trilha", { trackId: el.getAttribute("data-track") }));
     document.querySelectorAll("[data-lesson]").forEach(el => el.onclick = () => go("aula", { lessonId: el.getAttribute("data-lesson") }));
     document.querySelectorAll("[data-back-group]").forEach(el => el.onclick = () => { const g = groupById(el.getAttribute("data-back-group")); go("trilha", { trackId: g ? trackOf(g.id).id : App.trackId }); });
     document.querySelectorAll("[data-prova]").forEach(el => el.onclick = () => go("prova", { groupId: el.getAttribute("data-prova") }));
     document.querySelectorAll("[data-person]").forEach(el => el.onclick = () => go("ficha", { personId: el.getAttribute("data-person") }));
+    document.querySelectorAll("[data-editprova]").forEach(el => el.onclick = () => go("editprova", { groupId: el.getAttribute("data-editprova") }));
     if (App.view === "aula") mountAula();
     if (App.view === "prova") wireProva();
     if (App.view === "senha") wireChangePw(false);
@@ -401,6 +451,7 @@
       document.querySelectorAll("[data-unapprove]").forEach(el => el.onclick = () => { window.Store.setApproved(App.personId, el.getAttribute("data-unapprove"), false); render(); });
     }
     if (App.view === "gerenciar") wireGerenciar();
+    if (App.view === "editprova") wireEditProva();
   }
   function wireGerenciar() {
     const findTrack = id => TRACKS.find(t => t.id === id);
