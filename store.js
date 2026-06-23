@@ -28,6 +28,11 @@ const Store = (function () {
   }
   let db = load(); ensureUsers();
 
+  // Estrutura de conteúdo editável pelo gestor (trilhas/agrupamentos/vídeos).
+  // Se existir override (no Firebase ou local), ele substitui o courseData.js.
+  let courseOverride = null;
+  try { const lc = JSON.parse(localStorage.getItem("BHAR_COURSE") || "null"); if (Array.isArray(lc) && lc.length) courseOverride = lc; } catch (e) {}
+
   function loadScript(src) { return new Promise((res, rej) => { const s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); }); }
   async function initFirebase() {
     if (!useFirebase) return;
@@ -38,6 +43,7 @@ const Store = (function () {
       firebase.initializeApp(FIREBASE_CONFIG);
       await firebase.auth().signInAnonymously();   // exige "Anônimo" ativado na Authentication
       fdb = firebase.firestore();
+      try { const cs = await fdb.collection("config").doc("course").get(); if (cs.exists) { const t = cs.data().tracks; if (Array.isArray(t) && t.length) courseOverride = t; } } catch (e) {}
     } catch (e) { console.warn("Firebase indisponível — modo local.", e); fdb = null; }
   }
   function pushUser(username) {
@@ -67,6 +73,15 @@ const Store = (function () {
     getLesson(u, id) { return (db.progress[u] && db.progress[u][id]) || null; },
     setLesson(u, id, patch) { if (!db.progress[u]) db.progress[u] = {}; const c = db.progress[u][id] || { status: "nao_iniciada", watchedPct: 0 }; db.progress[u][id] = Object.assign(c, patch); save(); pushUser(u); return db.progress[u][id]; },
     getUserProgress(u) { return db.progress[u] || {}; },
+
+    /* estrutura de conteúdo editável (trilhas/agrupamentos/vídeos) */
+    getTracks() { return (courseOverride && courseOverride.length) ? courseOverride : window.COURSE.tracks; },
+    hasOverride() { return !!courseOverride; },
+    async saveTracks(tracks) {
+      courseOverride = tracks;
+      try { localStorage.setItem("BHAR_COURSE", JSON.stringify(tracks)); } catch (e) {}
+      if (fdb) { try { await fdb.collection("config").doc("course").set({ tracks: tracks, updatedAt: Date.now() }); } catch (e) { console.warn("saveTracks", e); } }
+    },
 
     /* aprovações do gestor */
     isApproved(u, id) { return !!(db.approvals[u] && db.approvals[u][id]); },

@@ -3,21 +3,25 @@
    ============================================================ */
 (function () {
   const COURSE = window.COURSE;
-  const TRACKS = COURSE.tracks;
+  let TRACKS = COURSE.tracks;          // estrutura ativa (pode vir do Firebase via Store)
   const QUIZZES = COURSE.quizzes || {};
   const root = document.getElementById("app");
   const App = { user: null, view: "login", trackId: null, groupId: null, lessonId: null, personId: null };
   let ytReady = null, player = null, pollTimer = null;
 
-  /* ---------- índice plano de aulas ---------- */
-  const ALL = [];
-  TRACKS.forEach(t => t.groups.forEach(g => g.lessons.forEach(l => ALL.push({ lesson: l, groupId: g.id, trackId: t.id }))));
+  /* ---------- índice plano de aulas (reconstruído quando a estrutura muda) ---------- */
+  let ALL = [];
+  function rebuild() { ALL = []; TRACKS.forEach(t => (t.groups || []).forEach(g => (g.lessons || []).forEach(l => ALL.push({ lesson: l, groupId: g.id, trackId: t.id })))); }
+  rebuild();
   function lessonInfo(id) { return ALL.find(x => x.lesson.id === id); }
-  function effGroup(id) { return window.Store.getMove(id) || (lessonInfo(id) || {}).groupId; }
-  function groupLessons(gid) { return ALL.filter(x => effGroup(x.lesson.id) === gid).map(x => x.lesson); }
-  function dname(id, fb) { return window.Store.getName(id) || fb; }
-  function trackOf(gid) { return TRACKS.find(t => t.groups.some(g => g.id === gid)); }
-  function groupById(gid) { for (const t of TRACKS) for (const g of t.groups) if (g.id === gid) return g; return null; }
+  function effGroup(id) { const i = lessonInfo(id); return i ? i.groupId : null; }
+  function groupLessons(gid) { return ALL.filter(x => x.groupId === gid).map(x => x.lesson); }
+  function dname(_id, fb) { return fb == null ? "" : fb; }   // títulos ficam na própria estrutura
+  function trackOf(gid) { return TRACKS.find(t => (t.groups || []).some(g => g.id === gid)); }
+  function groupById(gid) { for (const t of TRACKS) for (const g of (t.groups || [])) if (g.id === gid) return g; return null; }
+  /* salva a estrutura editada e re-renderiza */
+  function saveCourse() { window.Store.saveTracks(TRACKS); rebuild(); render(); }
+  function uid(p) { return p + Math.random().toString(36).slice(2, 8); }
 
   /* ---------- utilidades ---------- */
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
@@ -26,8 +30,9 @@
   function parseDM(s) { const m = String(s).match(/(\d{1,2})[\/\-](\d{1,2})/); return m ? Number(m[2]) * 100 + Number(m[1]) : null; }
   function lateCheck(dateStr, prazoStr) { const a = parseDM(dateStr), b = parseDM(prazoStr); return a != null && b != null && a > b; }
   function contentBadge(l) { if (isVideo(l)) return { t: "Vídeo", c: "badge-video" }; if (l.type === "pdf") return { t: "PDF / Doc", c: "badge-pdf" }; return { t: "Curso externo", c: "badge-link" }; }
+  function ytId(s) { const m = String(s).match(/(?:youtube\.com\/watch\?[^#]*\bv=|youtu\.be\/|youtube\.com\/embed\/)([A-Za-z0-9_-]{11})/); if (m) return m[1]; const m2 = String(s).trim().match(/^[A-Za-z0-9_-]{11}$/); return m2 ? m2[0] : null; }
 
-  function assignedTo(id, u) { const ov = window.Store.getAssign(id, u); if (ov !== undefined && ov !== null) return ov; const i = lessonInfo(id); return !!(i && i.lesson.seed && (u in i.lesson.seed)); }
+  function assignedTo(id, u) { const i = lessonInfo(id); if (!i) return false; const a = i.lesson.assign; if (a && Object.prototype.hasOwnProperty.call(a, u)) return !!a[u]; return !!(i.lesson.seed && (u in i.lesson.seed)); }
   function lessonState(u, l) {
     const live = window.Store.getLesson(u, l.id);
     if (live && live.status === "concluida") return { st: "concluida", date: fmt(live.completedAt), approved: window.Store.isApproved(u, l.id), live: true };
@@ -348,24 +353,37 @@
       ${blocks || '<p class="muted">Nenhum conteúdo atribuído.</p>'}`;
   }
 
-  /* ---------- ADMIN: gerenciar (renomear / mover / atribuir) ---------- */
+  /* ---------- ADMIN: gerenciar (criar / renomear / mover / atribuir / excluir) ---------- */
   function viewGerenciar() {
     const secs = window.Store.secretarias();
     const blocks = TRACKS.map(t => {
-      const groups = t.groups.map(g => {
-        const opts = trackOf(g.id).groups.map(gg => `<option value="${gg.id}">${esc(dname(gg.id, gg.title))}</option>`).join("");
-        const rows = groupLessons(g.id).map(l => {
+      const groupsHtml = (t.groups || []).map(g => {
+        const lessonsHtml = (g.lessons || []).map(l => {
           const chips = secs.map(s => `<button class="chip ${assignedTo(l.id, s.username) ? "on" : ""}" data-assign="${l.id}" data-user="${s.username}" title="${esc(s.name)}">${esc(s.short || s.name[0])}</button>`).join("");
-          const moveSel = `<select class="mini-sel" data-move="${l.id}">${trackOf(g.id).groups.map(gg => `<option value="${gg.id}" ${effGroup(l.id) === gg.id ? "selected" : ""}>${esc(dname(gg.id, gg.title))}</option>`).join("")}</select>`;
-          return `<div class="man-lesson"><div class="man-l-main"><span class="man-l-title">${esc(dname(l.id, l.title))}</span> <button class="mini-btn" data-rename="lesson:${l.id}">✎</button></div>
-            <div class="man-l-ctl"><span class="muted">mover:</span> ${moveSel} <span class="muted">atribuir:</span> <span class="chips">${chips}</span></div></div>`;
+          const moveSel = `<select class="mini-sel" data-move="${l.id}">${(t.groups || []).map(gg => `<option value="${gg.id}" ${g.id === gg.id ? "selected" : ""}>${esc(gg.title)}</option>`).join("")}</select>`;
+          return `<div class="man-lesson"><div class="man-l-main"><span class="man-l-title">${esc(l.title)}</span> <button class="mini-btn" data-rename="lesson:${l.id}" title="renomear">✎</button> <button class="mini-btn del" data-del="lesson:${l.id}" title="excluir">🗑</button></div>
+            <div class="man-l-ctl"><span class="muted">mover p/:</span> ${moveSel} <span class="muted">quem vê:</span> <span class="chips">${chips}</span></div></div>`;
         }).join("");
-        return `<div class="man-group"><div class="man-g-head"><strong>${esc(dname(g.id, g.title))}</strong> <button class="mini-btn" data-rename="group:${g.id}">✎ renomear grupo</button></div>${rows || '<p class="muted" style="padding:6px">sem vídeos</p>'}</div>`;
+        return `<div class="man-group"><div class="man-g-head"><strong>${esc(g.title)}</strong> <button class="mini-btn" data-rename="group:${g.id}" title="renomear">✎</button> <button class="mini-btn del" data-del="group:${g.id}" title="excluir">🗑</button> <button class="mini-btn add" data-addvideo="${g.id}">+ vídeo</button></div>
+          ${lessonsHtml || '<p class="muted" style="padding:6px">sem vídeos ainda</p>'}
+          <div class="add-lesson-form" data-addform="${g.id}" hidden>
+            <input class="af" data-f="title" placeholder="Título do vídeo/conteúdo">
+            <select class="af" data-f="type"><option value="youtube">Vídeo (YouTube)</option><option value="external">Curso externo (link)</option><option value="pdf">PDF / Documento</option></select>
+            <input class="af" data-f="url" placeholder="Cole o link do YouTube ou do conteúdo">
+            <input class="af afp" data-f="prazo" placeholder="Prazo ex: 20/07">
+            <input class="af afp" data-f="tempo" type="number" placeholder="Min">
+            <button class="btn btn-primary btn-sm" data-addsave="${g.id}">Adicionar</button>
+          </div></div>`;
       }).join("");
-      return `<div class="man-track"><div class="man-t-head"><h3>${t.icon} ${esc(dname(t.id, t.title))}</h3><button class="mini-btn" data-rename="track:${t.id}">✎ renomear trilha</button></div>${groups}</div>`;
+      return `<div class="man-track"><div class="man-t-head"><h3>${t.icon || "📚"} ${esc(t.title)}${t.locked ? ' <span class="badge badge-soon">Em breve</span>' : ""}</h3>
+        <span><button class="mini-btn" data-rename="track:${t.id}">✎ renomear</button> <button class="mini-btn del" data-del="track:${t.id}">🗑 excluir</button></span></div>
+        ${groupsHtml || ""}
+        <button class="mini-btn add" data-addgroup="${t.id}">+ agrupamento</button></div>`;
     }).join("");
-    return `<div class="page-head"><div><h1 class="page-title">Gerenciar conteúdo</h1><p class="page-sub">Renomeie trilhas/agrupamentos/vídeos, mova vídeos entre agrupamentos e atribua quem vê o quê.</p></div></div>
-      <div class="banner">Estas edições ficam <strong>neste dispositivo</strong> por enquanto (prévia). Para valerem para todas as secretárias e entre PCs, a gente liga o Firebase. As iniciais coloridas = pessoa atribuída.</div>${blocks}`;
+    return `<div class="page-head"><div><h1 class="page-title">Gerenciar conteúdo</h1><p class="page-sub">Crie e organize trilhas, agrupamentos e vídeos. As mudanças aparecem para as secretárias.</p></div></div>
+      ${window.Store.mode === "firebase" ? `<div class="banner ok">✅ As mudanças aqui <strong>salvam na nuvem</strong> e chegam a todas as secretárias. As iniciais coloridas = quem vê o conteúdo.</div>` : `<div class="banner">⚠️ Modo local: as mudanças ficam só neste computador até o Firebase estar conectado.</div>`}
+      <button class="btn btn-primary" data-addtrack="1">+ Nova trilha</button>
+      <div style="margin-top:14px">${blocks}</div>`;
   }
 
   /* ---------- pós-render ---------- */
@@ -385,14 +403,71 @@
     if (App.view === "gerenciar") wireGerenciar();
   }
   function wireGerenciar() {
-    document.querySelectorAll("[data-rename]").forEach(el => el.onclick = () => { const [kind, id] = el.getAttribute("data-rename").split(":"); const cur = window.Store.getName(id) || ""; const nv = window.prompt("Novo nome (" + kind + "):", cur); if (nv !== null) { window.Store.setName(id, nv); render(); } });
-    document.querySelectorAll("[data-move]").forEach(el => el.onchange = () => { window.Store.setMove(el.getAttribute("data-move"), el.value); render(); });
-    document.querySelectorAll("[data-assign]").forEach(el => el.onclick = () => { const id = el.getAttribute("data-assign"), us = el.getAttribute("data-user"); window.Store.setAssign(id, us, !assignedTo(id, us)); render(); });
+    const findTrack = id => TRACKS.find(t => t.id === id);
+    const findGroup = gid => { for (const t of TRACKS) { const g = (t.groups || []).find(x => x.id === gid); if (g) return { t, g }; } return null; };
+    const findLesson = lid => { for (const t of TRACKS) for (const g of (t.groups || [])) { const i = (g.lessons || []).findIndex(x => x.id === lid); if (i >= 0) return { t, g, i, l: g.lessons[i] }; } return null; };
+
+    document.querySelectorAll("[data-rename]").forEach(el => el.onclick = () => {
+      const [kind, id] = el.getAttribute("data-rename").split(":");
+      let cur = "", apply = null;
+      if (kind === "track") { const t = findTrack(id); if (t) { cur = t.title; apply = v => t.title = v; } }
+      else if (kind === "group") { const o = findGroup(id); if (o) { cur = o.g.title; apply = v => o.g.title = v; } }
+      else { const o = findLesson(id); if (o) { cur = o.l.title; apply = v => o.l.title = v; } }
+      if (!apply) return;
+      const nv = window.prompt("Novo nome:", cur);
+      if (nv !== null && nv.trim()) { apply(nv.trim()); saveCourse(); }
+    });
+    document.querySelectorAll("[data-del]").forEach(el => el.onclick = () => {
+      const [kind, id] = el.getAttribute("data-del").split(":");
+      if (!window.confirm("Excluir este item? Não dá para desfazer.")) return;
+      if (kind === "track") TRACKS = TRACKS.filter(t => t.id !== id);
+      else if (kind === "group") { const o = findGroup(id); if (o) o.t.groups = o.t.groups.filter(g => g.id !== id); }
+      else { const o = findLesson(id); if (o) o.g.lessons.splice(o.i, 1); }
+      saveCourse();
+    });
+    document.querySelectorAll("[data-move]").forEach(el => el.onchange = () => {
+      const o = findLesson(el.getAttribute("data-move")), target = el.value;
+      if (!o || o.g.id === target) return;
+      const tgt = findGroup(target); if (!tgt) return;
+      o.g.lessons.splice(o.i, 1); if (!tgt.g.lessons) tgt.g.lessons = []; tgt.g.lessons.push(o.l); saveCourse();
+    });
+    document.querySelectorAll("[data-assign]").forEach(el => el.onclick = () => {
+      const id = el.getAttribute("data-assign"), us = el.getAttribute("data-user");
+      const o = findLesson(id); if (!o) return;
+      if (!o.l.assign) o.l.assign = {};
+      o.l.assign[us] = !assignedTo(id, us); saveCourse();
+    });
+    const at = document.querySelector("[data-addtrack]");
+    if (at) at.onclick = () => {
+      const name = window.prompt("Nome da nova trilha:", ""); if (!name || !name.trim()) return;
+      TRACKS.push({ id: uid("t"), title: name.trim(), icon: "📚", description: "", groups: [{ id: uid("g"), title: "Agrupamento 1", lessons: [] }] }); saveCourse();
+    };
+    document.querySelectorAll("[data-addgroup]").forEach(el => el.onclick = () => {
+      const t = findTrack(el.getAttribute("data-addgroup")); if (!t) return;
+      const name = window.prompt("Nome do agrupamento:", ""); if (!name || !name.trim()) return;
+      if (!t.groups) t.groups = []; t.groups.push({ id: uid("g"), title: name.trim(), lessons: [] }); saveCourse();
+    });
+    document.querySelectorAll("[data-addvideo]").forEach(el => el.onclick = () => {
+      const f = document.querySelector('[data-addform="' + el.getAttribute("data-addvideo") + '"]'); if (f) f.hidden = !f.hidden;
+    });
+    document.querySelectorAll("[data-addsave]").forEach(el => el.onclick = () => {
+      const gid = el.getAttribute("data-addsave"), form = document.querySelector('[data-addform="' + gid + '"]'); if (!form) return;
+      const val = f => { const i = form.querySelector('[data-f="' + f + '"]'); return i ? String(i.value).trim() : ""; };
+      const title = val("title"); if (!title) { alert("Dê um título ao conteúdo."); return; }
+      const o = findGroup(gid); if (!o) return;
+      const type = val("type"), url = val("url"), prazo = val("prazo"), tempo = val("tempo");
+      const lesson = { id: uid("l"), title: title, assign: {} };
+      if (type === "youtube") { lesson.type = "youtube"; lesson.videoId = ytId(url) || url; }
+      else { lesson.type = type; lesson.url = url; }
+      if (prazo) lesson.prazo = prazo;
+      if (tempo && !isNaN(Number(tempo))) lesson.tempoMin = Number(tempo);
+      if (!o.g.lessons) o.g.lessons = []; o.g.lessons.push(lesson); saveCourse();
+    });
   }
 
   /* ---------- marca ---------- */
   function logoSVG() { return `<svg class="logo" viewBox="0 0 48 48" width="34" height="34" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="#0e7c66"/><path d="M24 11l13 6-13 6-13-6 13-6z" fill="#fff"/><path d="M16 22v7c0 2.5 3.6 4.5 8 4.5s8-2 8-4.5v-7l-8 3.7-8-3.7z" fill="#fff" opacity=".85"/><rect x="36" y="17" width="2" height="9" rx="1" fill="#fff"/></svg>`; }
   function brandBlock() { return `<div class="auth-brand">${logoSVG()}<div><div class="auth-brand-name">Faculdade <strong>Bhariátrica</strong></div><div class="auth-brand-sub">Treinamento & Qualificação</div></div></div>`; }
 
-  window.Store.init().then(render).catch(render);
+  window.Store.init().then(() => { try { TRACKS = window.Store.getTracks(); } catch (e) {} rebuild(); render(); }).catch(() => { rebuild(); render(); });
 })();
