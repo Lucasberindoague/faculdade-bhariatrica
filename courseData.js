@@ -22,7 +22,7 @@ const COURSE = {
   defaultPassword: "bar@123321",
 
   users: [
-    { username: "lucas",   name: "Lucas",   role: "admin",      email: "gerencia@bhariatrica.com.br", password: "admin@bhar25" },
+    { username: "lucas",   name: "Lucas",   role: "admin",      email: "gerencia@bhariatrica.com.br", password: "Bhar@123321" },
     { username: "joelma",  name: "Joelma",  role: "secretaria", short: "Jo", email: "joelma.bhariatrica@gmail.com" },
     { username: "bianca",  name: "Bianca",  role: "secretaria", short: "Bi", email: "bianca.bhariatrica@gmail.com" },
     { username: "tairine", name: "Tairine", role: "secretaria", short: "Tr", email: "tairini.bhariatrica@gmail.com" },
@@ -118,6 +118,13 @@ const COURSE = {
           { id: "pac-4", title: "Orientações pós vesícula", type: "youtube", videoId: "rQYdz5UyGfE", tempoMin: null, prazo: "05/06",
             seed: { joelma: "x", bianca: "x", tairine: "x", thaina: "x", mikaelle: "x", lucila: "x" } }
         ] }
+      ]
+    },
+    {
+      id: "pops-internos", title: "POPs Internos", icon: "📋",
+      description: "Procedimentos operacionais padrão (POPs) internos da clínica.",
+      groups: [
+        { id: "pop-g1", title: "POPs Gerais", lessons: [] }
       ]
     },
     {

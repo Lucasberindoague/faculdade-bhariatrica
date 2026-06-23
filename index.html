@@ -15,9 +15,10 @@
   <div id="app"><!-- a interface é renderizada aqui pelo app.js --></div>
 
   <!-- ordem importa: config -> dados -> store -> app -->
-  <script src="firebase-config.js"></script>
-  <script src="courseData.js"></script>
-  <script src="store.js"></script>
-  <script src="app.js"></script>
+  <!-- ?v= força o navegador a pegar sempre a versão nova (cache-busting). Suba +1 a cada atualização. -->
+  <script src="firebase-config.js?v=4"></script>
+  <script src="courseData.js?v=4"></script>
+  <script src="store.js?v=4"></script>
+  <script src="app.js?v=4"></script>
 </body>
 </html>
